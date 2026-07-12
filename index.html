@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ResumePilot AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  </head>
+  <body data-theme="dark">
+    <div class="background-layers" aria-hidden="true">
+      <div class="grid-overlay"></div>
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="orb orb-3"></div>
+    </div>
+
+    <main class="page-shell">
+      <header class="hero-card">
+        <div class="hero-copy">
+          <div class="brand-row">
+            <div class="brand-mark">R</div>
+            <div>
+              <strong>ResumePilot</strong>
+              <span>AI resume review</span>
+            </div>
+            <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle theme">☀️</button>
+          </div>
+          <p class="eyebrow">Professional Resume Intelligence</p>
+          <h1>Turn your resume into a stronger hiring story.</h1>
+          <p class="hero-text">
+            Upload a resume, add a target role, and receive a polished analysis with a clear score,
+            relevant skill detection, and actionable recommendations.
+          </p>
+          <div class="hero-pills">
+            <span>Skills Match</span>
+            <span>Section Review</span>
+            <span>Impact Feedback</span>
+          </div>
+        </div>
+        <div class="hero-panel">
+          <div class="hero-stat live-stat">
+            <strong>Live review</strong>
+            <span>Real-time resume intelligence</span>
+          </div>
+          <div class="hero-stat">
+            <strong>Actionable</strong>
+            <span>Growth suggestions</span>
+          </div>
+          <div class="hero-stat">
+            <strong>Role-aware</strong>
+            <span>Job keyword hints</span>
+          </div>
+        </div>
+      </header>
+
+      <section class="feature-strip" aria-label="Platform strengths">
+        <article class="feature-card">
+          <h3>Instant analysis</h3>
+          <p>Get a fast, structured readout of your resume strength and alignment.</p>
+        </article>
+        <article class="feature-card">
+          <h3>Smarter feedback</h3>
+          <p>Surface missing sections, weak language, and skills gaps with clarity.</p>
+        </article>
+        <article class="feature-card">
+          <h3>Hiring-ready polish</h3>
+          <p>Turn generic wording into impact-focused language that feels professional.</p>
+        </article>
+      </section>
+
+      <section class="dashboard">
+        <form id="resumeForm" method="post" enctype="multipart/form-data" class="panel form-panel">
+          <div class="panel-header">
+            <h2>Analyze a Resume</h2>
+            <p>Share the document and the role you want to target.</p>
+          </div>
+
+          <div class="input-group">
+            <label for="resume">Resume file</label>
+            <input type="file" id="resume" name="resume" accept=".txt,.pdf,.docx" required />
+          </div>
+
+          <div class="input-group">
+            <label for="job_description">Target role or job description</label>
+            <textarea id="job_description" name="job_description" rows="7" placeholder="Paste the role description here to compare keywords and relevance."></textarea>
+          </div>
+
+          <button type="submit" id="analyzeButton">Analyze Resume</button>
+          <div id="progressPanel" class="progress-panel" hidden>
+            <div class="progress-bar"><span id="progressFill"></span></div>
+            <p id="progressText">Preparing your analysis…</p>
+          </div>
+        </form>
+
+        <div class="panel results-panel" id="resultsPanel">
+          {% with messages = get_flashed_messages() %}
+            {% if messages %}
+              <div class="flash">
+                {% for message in messages %}
+                  <p>{{ message }}</p>
+                {% endfor %}
+              </div>
+            {% endif %}
+          {% endwith %}
+
+          {% if result %}
+            {% include 'results_fragment.html' %}
+          {% else %}
+            <div class="empty-state">
+              <div class="empty-badge">Live preview</div>
+              <h3>Your analysis will appear here</h3>
+              <p>Upload a resume and the platform will surface a concise hiring-readiness report.</p>
+              <ul class="empty-preview">
+                <li>Skill-fit scoring</li>
+                <li>Section coverage check</li>
+                <li>AI-style signal review</li>
+              </ul>
+            </div>
+          {% endif %}
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const toggle = document.getElementById('themeToggle');
+      const body = document.body;
+      const savedTheme = localStorage.getItem('theme');
+      const form = document.getElementById('resumeForm');
+      const progressPanel = document.getElementById('progressPanel');
+      const progressFill = document.getElementById('progressFill');
+      const progressText = document.getElementById('progressText');
+      const resultsPanel = document.getElementById('resultsPanel');
+      const analyzeButton = document.getElementById('analyzeButton');
+
+      if (savedTheme) {
+        body.setAttribute('data-theme', savedTheme);
+      }
+
+      const updateToggle = (theme) => {
+        toggle.innerHTML = theme === 'dark' ? '☀️' : '🌙';
+        toggle.setAttribute('aria-label', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+      };
+
+      updateToggle(body.getAttribute('data-theme') || 'dark');
+
+      toggle.addEventListener('click', () => {
+        const nextTheme = body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        body.setAttribute('data-theme', nextTheme);
+        localStorage.setItem('theme', nextTheme);
+        updateToggle(nextTheme);
+      });
+
+      const animateProgress = () => {
+        progressPanel.hidden = false;
+        let width = 12;
+        const steps = ['Scanning resume…', 'Extracting sections…', 'Matching job keywords…', 'Generating report…'];
+        let index = 0;
+        progressText.textContent = steps[0];
+        const interval = setInterval(() => {
+          width = Math.min(width + 18, 100);
+          progressFill.style.width = `${width}%`;
+          if (width >= 100) {
+            clearInterval(interval);
+          }
+          if (width > 20 && index < steps.length - 1) {
+            index += 1;
+            progressText.textContent = steps[index];
+          }
+        }, 400);
+      };
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const formData = new FormData(form);
+        analyzeButton.disabled = true;
+        analyzeButton.textContent = 'Analyzing…';
+        animateProgress();
+
+        const response = await fetch('/analyze', {
+          method: 'POST',
+          body: formData,
+        });
+        const data = await response.json();
+        if (data.success) {
+          resultsPanel.innerHTML = data.html;
+        } else {
+          resultsPanel.innerHTML = `<div class="empty-state"><h3>Analysis paused</h3><p>${data.message}</p></div>`;
+        }
+        analyzeButton.disabled = false;
+        analyzeButton.textContent = 'Analyze Resume';
+        progressPanel.hidden = true;
+      });
+    </script>
+  </body>
+</html>

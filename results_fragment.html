@@ -1,0 +1,149 @@
+{% if result %}
+  <div class="results-layout">
+    <div class="results-main">
+      <div class="score-card">
+        <div class="score-ring" style="--score: {{ result.score }};">
+          <span>{{ result.score }}<small>%</small></span>
+        </div>
+        <div>
+          <p class="eyebrow">Resume score</p>
+          <h3>{{ result.score }}/100</h3>
+          <p class="subtext">A balanced hiring-readiness signal for your document.</p>
+        </div>
+        <div class="file-pill">{{ result.filename }}</div>
+      </div>
+
+      <div class="summary-box">
+        <h3>AI-style summary</h3>
+        <p>{{ result.summary }}</p>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-card">
+          <h3>Role fit</h3>
+          <p><strong>{{ result.role_fit }}%</strong> match to the target role.</p>
+          <p><strong>Matched skills:</strong> {{ result.matched_skills | join(', ') if result.matched_skills else 'None' }}</p>
+        </div>
+        <div class="info-card">
+          <h3>Skill gaps</h3>
+          {% if result.missing_skills %}
+            <ul>
+              {% for skill in result.missing_skills %}
+                <li>{{ skill }}</li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p>No missing role skills detected.</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <h3>Analysis breakdown</h3>
+        <div class="chart-grid">
+          {% for label, value in result.breakdown.items() %}
+            <div class="chart-item">
+              <div class="bar-track"><div class="bar-fill" style="width: {{ value }}%"></div></div>
+              <div class="bar-meta"><span>{{ label }}</span><strong>{{ value }}%</strong></div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-card">
+          <h3>Detected skills</h3>
+          {% if result.skills_found %}
+            <ul>
+              {% for skill in result.skills_found %}
+                <li>{{ skill }}</li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p>No obvious skills were detected. Consider adding a skills section.</p>
+          {% endif %}
+        </div>
+
+        <div class="info-card">
+          <h3>Section coverage</h3>
+          <ul>
+            {% for name, present in result.sections.items() %}
+              <li>{{ name }}: {{ 'present' if present else 'missing' }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-card">
+          <h3>Impact signals</h3>
+          {% if result.impact_hits %}
+            <ul>
+              {% for phrase in result.impact_hits %}
+                <li>{{ phrase }}</li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p>No strong impact verbs were detected. Add concrete achievements.</p>
+          {% endif %}
+        </div>
+
+        <div class="info-card">
+          <h3>Suggested improvements</h3>
+          <ul>
+            {% for item in result.feedback %}
+              <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+
+      {% if result.job_keywords %}
+      <div class="summary-box compact">
+        <h3>Job keyword overlap</h3>
+        <p>{{ result.job_keywords | join(', ') }}</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <aside class="results-sidebar">
+      <div class="sidebar-card">
+        <h3>Resume strengths</h3>
+        <ul>
+          {% for item in result.strengths %}
+            <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      <div class="sidebar-card">
+        <h3>Gaps to improve</h3>
+        <ul>
+          {% for item in result.gaps %}
+            <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      <div class="sidebar-card ai-card">
+        <h3>AI-generation signal</h3>
+        <p class="signal-label">{{ result.ai_signal.label }}</p>
+        <p>{{ result.ai_signal.reason }}</p>
+        <span class="confidence-pill">Confidence: {{ result.ai_signal.confidence }}</span>
+      </div>
+      <div class="sidebar-card">
+        <h3>Export report</h3>
+        <a class="report-link" href="{{ url_for('report', filename=result.filename, format='html') }}" target="_blank">Download report</a>
+      </div>
+    </aside>
+  </div>
+{% else %}
+  <div class="empty-state">
+    <div class="empty-badge">Live preview</div>
+    <h3>Your analysis will appear here</h3>
+    <p>Upload a resume and the platform will surface a concise hiring-readiness report.</p>
+    <ul class="empty-preview">
+      <li>Skill-fit scoring</li>
+      <li>Section coverage check</li>
+      <li>AI-style signal review</li>
+    </ul>
+  </div>
+{% endif %}

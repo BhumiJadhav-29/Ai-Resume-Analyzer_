@@ -1,0 +1,7 @@
+[
+  "tests/test_app.py::test_home_page_loads",
+  "tests/test_app.py::test_report_download",
+  "tests/test_app.py::test_resume_analysis_and_report",
+  "tests/test_app.py::test_role_specific_skill_gap_detection",
+  "tests/test_app.py::test_vague_job_description_does_not_score_perfectly"
+]
